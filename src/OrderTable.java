@@ -10,7 +10,9 @@ public class OrderTable {
 
     public static ArrayList<Order> orderList = new ArrayList<Order>();
     public static ArrayList<Order> orderListAfterHeatingSystemSort = new ArrayList<Order>();
+    public static ArrayList<Order> orderListAfterCuttingTypeSort = new ArrayList<Order>();
     public static HashMap<Integer, ArrayList<Order>> standardGroupHashMap = new HashMap<Integer, ArrayList<Order>>();
+    public static HashMap<Integer, ArrayList<Order>> standardGroupHeatingSystemHashMap = new HashMap<Integer, ArrayList<Order>>();
     public static HashMap<Float, ArrayList<Order>> standardHashMap = new HashMap<Float, ArrayList<Order>>();
     public static HashMap<String, Float> steelWeightTable = new HashMap<String, Float>();
 

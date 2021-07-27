@@ -66,6 +66,7 @@ public class Order{
     public final int getHeatingSystem(){return heatingSystem;}
     public final String getSteelType(){return steelType;}
     public final Cutting getCuttingType (){return cuttingType;}
+    
     public final float getWeight(){return weight;}
 
 

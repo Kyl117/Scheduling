@@ -35,5 +35,9 @@ public class Main {
         OrderTable.createSteelWeightTable();
         DemandCalculator.calculateDemand();
         FileWriter.outputDemandTable(DemandCalculator.steelDemandTable);
+
+        //ouput schedule
+        FileWriter.outputSchedule(OrderTable.orderListAfterHeatingSystemSort);
+
     }
-} 
+}
