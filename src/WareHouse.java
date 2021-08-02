@@ -2,6 +2,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
 
+/**
+ * The class to record the data of steel blank in the warehouse.
+ * 记录仓库里已经有的坯料。
+ */
 public class WareHouse {
     private static int inputColWeight = 2; 
     private static int inputColSteelType = 13;

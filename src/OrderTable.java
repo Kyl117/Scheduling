@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 
 /**
- * This class is to group order objects.
+ * This class is to group the order objects.
  * After constructing all the order objects, put them all into a list and divide them into serveral groups for scheduling.
  * 为每一个订单建设了订单Object后，将所有订单写进一个列表里，并用Hashmap将订单Object按照特征（包括组别，规格）区分开不同组别 
  * 
