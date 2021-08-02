@@ -169,6 +169,9 @@ public class Scheduling {
 
                 //record current Steel Type
                 String currentSteelType = localGroupOrderList.get(randomIndex).getSteelType();
+
+                //record current Steel Type
+                Order.Cutting currentCuttingType = localGroupOrderList.get(randomIndex).getCuttingType();
                 
                 //remove from local list
                 localGroupOrderList.remove(randomIndex);
@@ -176,6 +179,16 @@ public class Scheduling {
                 //combine all orders with same steelType
                 for(int j=0; j<localGroupOrderList.size(); j++){
                     if(localGroupOrderList.get(j).getSteelType().equals(currentSteelType)){
+                        OrderTable.scheduleAfterCuttingTypeSort.add(localGroupOrderList.get(j));
+                        localGroupOrderList.remove(j);
+                        j--;
+                        i++;
+                    }
+                }
+
+                //combine all orders with same Cutting Type
+                for(int j=0; j<localGroupOrderList.size(); j++){
+                    if(localGroupOrderList.get(j).getCuttingType() == (currentCuttingType)){
                         OrderTable.scheduleAfterCuttingTypeSort.add(localGroupOrderList.get(j));
                         localGroupOrderList.remove(j);
                         j--;
@@ -220,6 +233,9 @@ public class Scheduling {
 
                 //record current Steel Type
                 String currentSteelType = localGroupOrderList.get(randomIndex).getSteelType();
+
+                //record current Standard
+                Float currentStandard = localGroupOrderList.get(randomIndex).getStandard();
                 
                 //remove from local list
                 localGroupOrderList.remove(randomIndex);
@@ -228,6 +244,16 @@ public class Scheduling {
                 for(int j=0; j<localGroupOrderList.size(); j++){
                     if(localGroupOrderList.get(j).getSteelType().equals(currentSteelType)){
                         OrderTable.scheduleAfterStandardSort.add(localGroupOrderList.get(j));
+                        localGroupOrderList.remove(j);
+                        j--;
+                        i++;
+                    }
+                }
+
+                //combine all orders with same Standard
+                for(int j=0; j<localGroupOrderList.size(); j++){
+                    if(localGroupOrderList.get(j).getStandard() == (currentStandard)){
+                        OrderTable.scheduleAfterCuttingTypeSort.add(localGroupOrderList.get(j));
                         localGroupOrderList.remove(j);
                         j--;
                         i++;
