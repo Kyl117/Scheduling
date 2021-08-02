@@ -1,3 +1,8 @@
+
+/**
+ * This class is a helper class, only for converting standard to corresponding kocks group
+ * 转化订单的规格到适当的kocks 组别（27组）
+ */
 public class StandardToGroup{
     private static final int totalGroup = 27;
     private static Float[] groupLimit ={
@@ -7,7 +12,7 @@ public class StandardToGroup{
         65.08f,67.58f,70.06f,72.55f,75.03f,77.53f,80.1f  //21-27
     };
 
-    public static int convertToStandardGroup(float value) {
+    public static int convertTokocksGroup(float value) {
         int group = 0;
         for(int i = 0; i<totalGroup+1; i++){
             group = i;
@@ -15,10 +20,10 @@ public class StandardToGroup{
                 break;
             }
         }
-        if(group <= 0 || group >= 28){
+        if(group <= 0 || group >= totalGroup + 1){
             group = -1;
         }
-        group = 28 - group;
+        group = totalGroup + 1 - group;
         return group;
     }
 }

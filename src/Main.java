@@ -1,34 +1,15 @@
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class Main {
-    private static int geneticAlgorithmIteration = 2500;
     public static void main(String[] args) throws IOException{
 
+        //input excel file
         FileReader orderfile = new FileReader();
         orderfile.loadfile("test.xls");
         OrderTable.createOrderTable(orderfile.getRecords());
 
-        double idleTime = 0;
-        OrderTable.sortOrderListbyBigGroup();
-        ArrayList<Order> leastidleTimeSchedule = new ArrayList<Order>();
-        for(int i=0; i<geneticAlgorithmIteration; i++){
-            OrderTable.randomSortOrderListByHeatingSystem();
-            double currentIdleTime = FitnessCalculator.calculateidleTime(OrderTable.orderListAfterHeatingSystemSort);
-
-            if( i == 0 || currentIdleTime < idleTime){
-                idleTime = currentIdleTime;
-                leastidleTimeSchedule = OrderTable.orderListAfterHeatingSystemSort;
-            }
-        }
-        OrderTable.orderListAfterHeatingSystemSort = leastidleTimeSchedule;
-        System.out.println( "idle time:" + FitnessCalculator.calculateidleTime(OrderTable.orderListAfterHeatingSystemSort));
-        
-        
-        OrderTable.printOrderListAfterHeatingSystemSort();
-
-
         //ouput 胚料需求計劃
+
         FileReader warehouse = new FileReader();
         warehouse.loadfile("warehouse.xls");
         WareHouse.createSteelWeightTable(warehouse.getRecords());
@@ -36,8 +17,29 @@ public class Main {
         DemandCalculator.calculateDemand();
         FileWriter.outputDemandTable(DemandCalculator.steelDemandTable);
 
+        //scheduling
+
+        //Step1.根据大组顺序排列
+        Scheduling.sortOrderListbyBigGroup();
+        //Step2.根据加热制度排序
+        Scheduling.geneticAlgorithmWithHeatingSystem();
+        OrderTable.printOrderListAfterHeatingSystemSort();
+        System.out.println( "idle time:" + FitnessCalculator.calculateidleTime(OrderTable.scheduleAfterHeatingSystemSort));
+        //Step3. 根据切割方式排序
+        OrderTable.createkocksGroupHeatingSystemOrderList();
+        Scheduling.geneticAlgorithmWithCuttingType();
+        OrderTable.printscheduleAfterCuttingTypeSort();
+        System.out.println( "idle time:" + FitnessCalculator.calculateidleTime(OrderTable.scheduleAfterCuttingTypeSort));
+        //Step4. 根据成品规格排序
+        OrderTable.createkocksGroupHeatingSystemCuttingTypeOrderList();
+        Scheduling.geneticAlgorithmWithStandard();
+        OrderTable.printscheduleAfterStandardSort();
+        System.out.println( "idle time:" + FitnessCalculator.calculateidleTime(OrderTable.scheduleAfterStandardSort));
+ 
+        
         //ouput schedule
-        FileWriter.outputSchedule(OrderTable.orderListAfterHeatingSystemSort);
+        FileWriter.outputSchedule(OrderTable.scheduleAfterCuttingTypeSort);
+
 
     }
 }

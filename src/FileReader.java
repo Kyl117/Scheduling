@@ -6,29 +6,18 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 
+/**
+ * The class for reading an excel file.
+ */
 public class FileReader {
 
     private ArrayList<ArrayList<String>> records = new ArrayList<>();
-    // private static List<String> getRecordFromLine(String line) {
-    // List<String> values = new ArrayList<String>();
-    // Scanner rowScanner = new Scanner(line);
-    // rowScanner.useDelimiter(",");
-    // while (rowScanner.hasNext()) {
-    // values.add(rowScanner.next());
-    // }
-    // rowScanner.close();
-    // return values;
-    // }
 
-    // public void loadfile(String fileName) throws FileNotFoundException {
-    // Scanner scanner = new Scanner(new File(fileName));
-    // while (scanner.hasNextLine()) {
-    // records.add(getRecordFromLine(scanner.nextLine()));
-    // }
-
-    // scanner.close();
-    // }
-
+    /**
+     * Read all the data from an input excel file
+     * @param fileName The input file name(e.g."inputdata.xls")
+     * @throws IOException 
+     */
     public void loadfile(String fileName) throws IOException {
         FileInputStream fis = new FileInputStream(new File(fileName));
         // creating workbook instance that refers to .xls file

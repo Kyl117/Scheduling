@@ -1,31 +1,55 @@
 import java.util.ArrayList;
 import java.util.Map;
+
+
 import java.util.HashMap;
 
+
+/**
+ * This class is to group order objects.
+ * After constructing all the order objects, put them all into a list and divide them into serveral groups for scheduling.
+ * 为每一个订单建设了订单Object后，将所有订单写进一个列表里，并用Hashmap将订单Object按照特征（包括组别，规格）区分开不同组别 
+ * 
+ */
 public class OrderTable {
+
     private static final int inputColOrderNmuber = 1;
     private static final int inputColSteelType = 8;
     private static final int inputColStandard = 12;
+    private static final int inputColLength = 14;
     private static final int inputColWeight = 29;
 
+    //-----------------For 坯料需求计划----------------------
     public static ArrayList<Order> orderList = new ArrayList<Order>();
-    public static ArrayList<Order> orderListAfterHeatingSystemSort = new ArrayList<Order>();
-    public static ArrayList<Order> orderListAfterCuttingTypeSort = new ArrayList<Order>();
-    public static HashMap<Integer, ArrayList<Order>> standardGroupHashMap = new HashMap<Integer, ArrayList<Order>>();
-    public static HashMap<Integer, ArrayList<Order>> standardGroupHeatingSystemHashMap = new HashMap<Integer, ArrayList<Order>>();
-    public static HashMap<Float, ArrayList<Order>> standardHashMap = new HashMap<Float, ArrayList<Order>>();
     public static HashMap<String, Float> steelWeightTable = new HashMap<String, Float>();
+    //------------------------------------------------------
+
+    public static ArrayList<Order> scheduleAfterHeatingSystemSort = new ArrayList<Order>();
+    public static ArrayList<Order> scheduleAfterCuttingTypeSort = new ArrayList<Order>();
+    public static ArrayList<Order> scheduleAfterStandardSort = new ArrayList<Order>();
+
+    //每个key为同一个kocks组
+    public static HashMap<Integer, ArrayList<Order>> standardGroupHashMap = new HashMap<Integer, ArrayList<Order>>();
+    
+    //每个key为同一个规格
+    public static HashMap<Float, ArrayList<Order>> standardHashMap = new HashMap<Float, ArrayList<Order>>();
+
+    //每个key为同一个kocks组或加热制度
+    public static ArrayList<ArrayList<Order>> kocksGroupHeatingSystemOrderList = new ArrayList<ArrayList<Order>>();
+
+    //每个key为同一个kocks组或加热制度或切割方式
+    public static ArrayList<ArrayList<Order>> kocksGroupHeatingSystemCuttingTypeOrderList = new ArrayList<ArrayList<Order>>();
 
     private static void createOrderList(int numberOfOrder, ArrayList<ArrayList<String>> records) {
         for (int i = 1; i < numberOfOrder + 1; i++) {
             OrderTable.orderList.add(new Order(OrderTable.orderList.size() + 1, records.get(i).get(inputColOrderNmuber),
                     Float.valueOf(records.get(i).get(inputColStandard)),
-                    StandardToGroup.convertToStandardGroup(Float.valueOf(records.get(i).get(inputColStandard))), 99,
-                    records.get(i).get(inputColSteelType), 101, Float.valueOf(records.get(i).get(inputColWeight))));
+                    StandardToGroup.convertTokocksGroup(Float.valueOf(records.get(i).get(inputColStandard))), 99,
+                    records.get(i).get(inputColSteelType), 101, Float.valueOf(records.get(i).get(inputColWeight)), 
+                    Float.valueOf(records.get(i).get(inputColLength))));
         }
     }
 
-    // 大組 big group
     private static void createStandardGroupHashMap(int numberOfOrder) {
         for (int i = 0; i < numberOfOrder; i++) {
             int key = OrderTable.orderList.get(i).getStandardGroup();
@@ -39,7 +63,6 @@ public class OrderTable {
         }
     }
 
-    // 中組 middle group
     private static void createStandardHashMap(int numberOfOrder) {
         for (int i = 0; i < numberOfOrder - 1; i++) {
             Float key = OrderTable.orderList.get(i).getStandard();
@@ -69,108 +92,106 @@ public class OrderTable {
         }
     }
 
-    // create all
     public static void createOrderTable(ArrayList<ArrayList<String>> records) throws NumberFormatException {
         int numberOfOrder = records.size() - 1;
-        // int numberOfOrder = 10;
+        // int numberOfOrder = 4;
         createOrderList(numberOfOrder, records);
         createStandardGroupHashMap(numberOfOrder);
         createStandardHashMap(numberOfOrder);
     }
 
-    // Step 1. sort order by big group
-    public static void sortOrderListbyBigGroup() {
-        ArrayList<Order> tempOrderList = new ArrayList<Order>();
-        for (Map.Entry<Integer, ArrayList<Order>> item : standardGroupHashMap.entrySet()) {
-            for (Order order : item.getValue()) {
-                tempOrderList.add(order);
+    public static void createkocksGroupHeatingSystemOrderList(){
+        int lastHeatingSystem = scheduleAfterHeatingSystemSort.get(0).getHeatingSystem();
+        int lastKocksGroup = scheduleAfterHeatingSystemSort.get(0).getStandardGroup();
+        ArrayList<Order> currentOrderList= new ArrayList<Order>();
+        for(Order item:scheduleAfterHeatingSystemSort){
+            if(!(HeatingSystem.IsHeatingSystemValid(lastHeatingSystem, item.getHeatingSystem())) || lastKocksGroup != item.getStandardGroup()){   
+                ArrayList<Order> copyOrderList= new ArrayList<Order>(currentOrderList);
+                kocksGroupHeatingSystemOrderList.add(copyOrderList);
+                currentOrderList.clear();
             }
-        }
-        orderList = tempOrderList;
-    }
-
-    //(helper function)
-    private static boolean onlyHeatingSystem(ArrayList<Order> localGroupOrderList,int heatingSystem){
-        int size = localGroupOrderList.size();
-        for(int i=0; i<size;i++){
-            if(localGroupOrderList.get(i).getHeatingSystem() != heatingSystem){return false;}
-        }
-        return true;
-    }
-
-    // (helper function) for Step 2 random heating system sort
-    private static int getValidRandomIndex(ArrayList<Order> localGroupOrderList, int lastHeatingSystem) {
-        int randomIndex = (int) (Math.random() * localGroupOrderList.size());
-        int count = 0;
-        if (orderListAfterHeatingSystemSort.size() > 0) {
-            while ((lastHeatingSystem == 2 && localGroupOrderList.get(randomIndex).getHeatingSystem() == 3 && !onlyHeatingSystem(localGroupOrderList, 3))
-                    || (lastHeatingSystem == 3 && localGroupOrderList.get(randomIndex).getHeatingSystem() == 2 && !onlyHeatingSystem(localGroupOrderList, 2))
-                    || (lastHeatingSystem == 3 && localGroupOrderList.get(randomIndex).getHeatingSystem() == 4 && !onlyHeatingSystem(localGroupOrderList, 4))
-                    || (lastHeatingSystem == 4 && localGroupOrderList.get(randomIndex).getHeatingSystem() == 3 && !onlyHeatingSystem(localGroupOrderList, 3)))
-            {
-                count++;
-                if(count>20){break;}
-                randomIndex = (int) (Math.random() * localGroupOrderList.size() );
-            }
-        }
-        return randomIndex;
-    }
-
-    // Step 2. random sort order list by heating system without changing big group
-    // order
-    public static void randomSortOrderListByHeatingSystem() {
-        int lastHeatingSystem = 0;
-        String SteelTypeInLastBigGroup = "";
-        for (Map.Entry<Integer, ArrayList<Order>> item : standardGroupHashMap.entrySet()) {
-            ArrayList<Order> localGroupOrderList = item.getValue();
-            final int originalSize = localGroupOrderList.size();
+            currentOrderList.add(item);  
+            lastKocksGroup = item.getStandardGroup();
+            lastHeatingSystem = item.getHeatingSystem();
             
-            for (int i = 0; i < originalSize; i++) {
-                int randomIndex = getValidRandomIndex(localGroupOrderList, lastHeatingSystem);
-
-                //make sure the first order's steeltype is the same as that in last big group
-                if(i == 0 && item.getKey()!=1){
-                    for(int k=0; k<localGroupOrderList.size(); k++){
-                        if(localGroupOrderList.get(k).getSteelType().equals(SteelTypeInLastBigGroup) ){
-                            randomIndex = k;
-                        }
-                    }
-                }
-
-                orderListAfterHeatingSystemSort.add(localGroupOrderList.get(randomIndex));
-                lastHeatingSystem = localGroupOrderList.get(randomIndex).getHeatingSystem();
-
-                //record current Steel Type
-                String currentSteelType = localGroupOrderList.get(randomIndex).getSteelType();
-
-                //remove from local list
-                localGroupOrderList.remove(randomIndex);
-
-                //combine all orders with same steelType
-                for(int j=0; j<localGroupOrderList.size(); j++){
-                    if(localGroupOrderList.get(j).getSteelType().equals(currentSteelType)){
-                        orderListAfterHeatingSystemSort.add(localGroupOrderList.get(j));
-                        localGroupOrderList.remove(j);
-                        j--;
-                        i++;
-                    }
-                }
-                SteelTypeInLastBigGroup = orderListAfterHeatingSystemSort.get(orderListAfterHeatingSystemSort.size()-1).getSteelType();
-            }
         }
+        kocksGroupHeatingSystemOrderList.add(currentOrderList);
+    }
+
+    public static void createkocksGroupHeatingSystemCuttingTypeOrderList(){
+        int lastHeatingSystem = scheduleAfterCuttingTypeSort.get(0).getHeatingSystem();
+        int lastKocksGroup = scheduleAfterCuttingTypeSort.get(0).getStandardGroup();
+        Order.Cutting lastCuttingType = scheduleAfterCuttingTypeSort.get(0).getCuttingType();
+
+        ArrayList<Order> currentOrderList= new ArrayList<Order>();
+        for(Order item:scheduleAfterCuttingTypeSort){
+            if(!(HeatingSystem.IsHeatingSystemValid(lastHeatingSystem, item.getHeatingSystem())) || lastKocksGroup != item.getStandardGroup() || lastCuttingType != item.getCuttingType()){   
+                ArrayList<Order> copyOrderList= new ArrayList<Order>(currentOrderList);
+                kocksGroupHeatingSystemCuttingTypeOrderList.add(copyOrderList);
+                currentOrderList.clear();
+            }
+            currentOrderList.add(item);  
+            lastKocksGroup = item.getStandardGroup();
+            lastHeatingSystem = item.getHeatingSystem();
+            lastCuttingType = item.getCuttingType();
+            
+        }
+        kocksGroupHeatingSystemCuttingTypeOrderList.add(currentOrderList);
     }
 
     public static void printOrderList() {
         System.out.println("Order List:");
         for (Order order : orderList) {
-            System.out.println(order.getInputNumber() + "\t "+ order.getGroup() + order.getStandardGroup() + "\t " + order.getStandard()
+            System.out.println(order.getInputNumber() + "\t "+ order.getGroup() +"\t" +order.getStandardGroup() + "\t " + order.getStandard()
                     + "\t " + order.getSteelType() + "\t " + order.getHeatingSystem() + "\t " + order.getCuttingType());
+        }
+    }
+
+    public static void printOrderList(ArrayList<Order> orderList){
+        for(Order order:orderList){
+            System.out.print(order.getInputNumber()+" ");
+        }
+    }
+
+    public static void printkocksGroupHeatingSystemorderlist(){
+        for(ArrayList<Order> list:kocksGroupHeatingSystemOrderList){
+            System.out.print(kocksGroupHeatingSystemOrderList.indexOf(list)+": ");
+            for(Order order:list){
+                System.out.print(order.getInputNumber()+" ");
+            }
+            System.out.println(" ");
+        }
+    }
+
+    public static void printkocksGroupHeatingSystemCuttingTypeOrderList(){
+        for(ArrayList<Order> list:kocksGroupHeatingSystemCuttingTypeOrderList){
+            System.out.print(kocksGroupHeatingSystemCuttingTypeOrderList.indexOf(list)+": ");
+            for(Order order:list){
+                System.out.print(order.getInputNumber()+" ");
+            }
+            System.out.println(" ");
         }
     }
 
     public static void printOrderListAfterHeatingSystemSort() {
         System.out.println("Order List After Heating System Sort:");
-        for (Order order : orderListAfterHeatingSystemSort) {
+        for (Order order : scheduleAfterHeatingSystemSort) {
+            System.out.println(order.getInputNumber() + "\t "+ order.getGroup()+ "\t" + order.getStandardGroup() + "\t " + order.getStandard()
+                    + "\t " + order.getSteelType() + "\t\t " + order.getHeatingSystem() + "\t " + order.getCuttingType());
+        }
+    }
+
+    public static void printscheduleAfterCuttingTypeSort() {
+        System.out.println("Schedule After Cutting Type Sort:");
+        for (Order order : scheduleAfterCuttingTypeSort) {
+            System.out.println(order.getInputNumber() + "\t "+ order.getGroup()+ "\t" + order.getStandardGroup() + "\t " + order.getStandard()
+                    + "\t " + order.getSteelType() + "\t\t " + order.getHeatingSystem() + "\t " + order.getCuttingType());
+        }
+    }
+
+    public static void printscheduleAfterStandardSort() {
+        System.out.println("Schedule After Standard Sort:");
+        for (Order order : scheduleAfterHeatingSystemSort) {
             System.out.println(order.getInputNumber() + "\t "+ order.getGroup()+ "\t" + order.getStandardGroup() + "\t " + order.getStandard()
                     + "\t " + order.getSteelType() + "\t\t " + order.getHeatingSystem() + "\t " + order.getCuttingType());
         }
